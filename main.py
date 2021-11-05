@@ -144,8 +144,8 @@ class Phenotype:
         self.score = 0
 
         ok_score = 1
-        fail_score = -1
-        punish_score = -1
+        fail_score = 1
+        punish_score = 1
 
         num_format = re.compile(r'^\-?[1-9][0-9]*$')
         it_is = re.match(num_format,self.chromosome[0][0]) 
@@ -171,7 +171,7 @@ class Phenotype:
                 self.approvedArray.append(2)
             else:
                 self.score -= fail_score
-                self.puhishedArray.append(2)
+                self.punishedArray.append(2)
         except:
             self.score -= punish_score
         pass
@@ -185,7 +185,7 @@ class Phenotype:
                 self.approvedArray.append(3)
             else:
                 self.score -= fail_score
-                self.puhishedArray.append(3)
+                self.punishedArray.append(3)
         except:
             self.score -= punish_score
 
@@ -198,7 +198,7 @@ class Phenotype:
                 self.approvedArray.append(4)
             else:
                 self.score -= fail_score
-                self.puhishedArray.append(4)
+                self.punishedArray.append(4)
         except:
             self.score -= punish_score
 
@@ -211,7 +211,7 @@ class Phenotype:
                 self.approvedArray.append(5)
             else:
                 self.score -= fail_score
-                self.puhishedArray.append(5)
+                self.punishedArray.append(5)
         except:
             self.score -= punish_score
 
@@ -224,7 +224,7 @@ class Phenotype:
                 self.approvedArray.append(6)
             else:
                 self.score -= fail_score
-                self.puhishedArray.append(6)
+                self.punishedArray.append(6)
         except:
             self.score -= punish_score
 
@@ -237,7 +237,7 @@ class Phenotype:
                 self.approvedArray.append(7)
             else:
                 self.score -= fail_score
-                self.puhishedArray.append(7)
+                self.punishedArray.append(7)
         except:
             self.score -= punish_score
 
@@ -250,7 +250,7 @@ class Phenotype:
                 self.approvedArray.append(8)
             else:
                 self.score -= fail_score
-                self.puhishedArray.append(8)
+                self.punishedArray.append(8)
         except:
             self.score -= punish_score
 
@@ -262,7 +262,7 @@ class Phenotype:
                 self.approvedArray.append(9)
             else:
                 self.score -= fail_score
-                self.puhishedArray.append(9)
+                self.punishedArray.append(9)
         except:
             self.score -= punish_score
 
@@ -274,7 +274,7 @@ class Phenotype:
                 self.approvedArray.append(10)
             else:
                 self.score -= fail_score
-                self.puhishedArray.append(10)
+                self.punishedArray.append(10)
         except:
             self.score -= punish_score
 
@@ -287,7 +287,7 @@ class Phenotype:
                 self.approvedArray.append(11)
             else:
                 self.score -= fail_score
-                self.puhishedArray.append(11)
+                self.punishedArray.append(11)
         except:
             self.score -= punish_score
 
@@ -300,7 +300,7 @@ class Phenotype:
                 self.approvedArray.append(12)
             else:
                 self.score -= fail_score
-                self.puhishedArray.append(12)
+                self.punishedArray.append(12)
         except:
             self.score -= punish_score
 
@@ -313,7 +313,7 @@ class Phenotype:
                 self.approvedArray.append(13)
             else:
                 self.score -= fail_score
-                self.puhishedArray.append(13)
+                self.punishedArray.append(13)
         except:
             self.score -= punish_score
 
@@ -326,7 +326,7 @@ class Phenotype:
                 self.approvedArray.append(14)
             else:
                 self.score -= fail_score
-                self.puhishedArray.append(14)
+                self.punishedArray.append(14)
         except:
             self.score -= punish_score
 
@@ -339,7 +339,7 @@ class Phenotype:
                 self.approvedArray.append(15)
             else:
                 self.score -= fail_score
-                self.puhishedArray.append(15)
+                self.punishedArray.append(15)
         except:
             self.score -= punish_score
 
@@ -353,7 +353,7 @@ class Riddle:
     '''
     proceso general
     '''
-    def solve(self, n_population):
+    def solve(self, n_population, max_generations):
         
         self.generate(n_population)
         print(f"Poblacion creada con {len(self.population)} individuos")
@@ -363,19 +363,19 @@ class Riddle:
         print(self.population[0].decode())
 
         print("Inicio del proceso iterativo")
-        fit, indi = self.iterar(n_population)
+        fit, indi = self.iterar(n_population, max_generations)
 
         print(f"Fin del proceso, mejor resultado \n - Fitness: {fit} \n - Individuo {indi.chromosome} \n - Individuo {indi.decode()}")
         
 
-    def iterar(self, n_population):
+    def iterar(self, n_population, max_generations):
 
         counter = 0
         break_condition = False
 
         crossover_prop = 0.80
         
-        while True:
+        while not(break_condition):
             counter += 1
             print('Iteracion  %d' %counter)
             self.fitness_function()
@@ -390,8 +390,8 @@ class Riddle:
                 print(self.population[0].approvedArray)
 
             # condicion de corte
-            if approved >= 14:
-                break
+            if approved >= 14 or counter > max_generations:
+                break_condition = True
             pass
 
         self.fitness_function()
@@ -469,7 +469,7 @@ class Riddle:
 start = time.time()
 
 rid = Riddle()
-rid.solve(n_population)
+rid.solve(n_population, 1000)
 
 end = time.time()
 hours, rem = divmod(end-start, 3600)
