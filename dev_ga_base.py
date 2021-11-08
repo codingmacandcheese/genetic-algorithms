@@ -49,24 +49,25 @@ editorRow = 4
 def getScore(element):
     return element.score
 
+# Devuelve cuantos genes seran mutados según una probabilidad
 def getMutationAmount():
   prob = random.random()
-  if prob < 0.8  : return 1
-  if prob < 0.95 : return 2
+  if prob < 0.7  : return 1
+  if prob < 0.9 : return 2
   return 3
 
-def translate(value, leftMin, leftMax, rightMin, rightMax):
+def translate(value, leftMin, leftMax, rightMin, rightMax, bias):
     # Figure out how 'wide' each range is
     leftSpan = leftMax - leftMin
     rightSpan = rightMax - rightMin
 
     if leftSpan == 0:
-        return 0.1
+        return bias
     # Convert the left range into a 0-1 range (float)
     valueScaled = float(value - leftMin) / float(leftSpan)
 
     # Convert the 0-1 range into a value in the right range.
-    return rightMin + (valueScaled * rightSpan)
+    return rightMin + (valueScaled * rightSpan) + bias
 
 class Phenotype:
 
@@ -78,8 +79,10 @@ class Phenotype:
         self.score = 0
         self.fitness = 0
 
+
     def random_chromosome(self):
         self.chromosome = [random.choice(genes) for i in range(25)]
+
 
     def decode(self):
         ''' traduce 0's y 1's (conjunto de genes: 3) en valores segun un diccionario '''
@@ -103,12 +106,19 @@ class Phenotype:
                 geneIndex = random.randint(0, 24)
                 self.chromosome[geneIndex] = random.choice(genes)
 
+
+    def crossOver(self, other):
+        genes1 = self.chromosome
+        genes2 = other.chromosome
+        limit = random.randint(0, len(genes1))
+        return [*genes1[:limit], *genes2[limit:]]
+
+
     def fitness_function(self):
         ''' calcula el valor de fitness del cromosoma segun el problema en particular '''
         self.score = 0
 
         ok_score = 1
-        fail_score = -1
         punish_score = -1 
         
         chromosome = self.decode()
@@ -124,18 +134,14 @@ class Phenotype:
             i = chromosome[professionRow].index('Mathematician')
             if chromosome[colorsRow][i] == 'red':
                 self.score += ok_score
-#             else:
-#                 self.score += fail_score
         except:
             pass
 
-    # 3. El hacker programa en Python.
+        # 3. El hacker programa en Python.
         try:
             i = chromosome[professionRow].index('Hacker')
             if chromosome[languajeRow][i] == 'Python':
                 self.score += ok_score
-#             else:
-#                 self.score += fail_score
         except:
             pass
 
@@ -144,8 +150,6 @@ class Phenotype:
             i = chromosome[editorRow].index('Brackets')
             if chromosome[colorsRow][i] == 'green':
                 self.score += ok_score
-#             else:
-#                 self.score += fail_score
         except:
             pass
 
@@ -154,8 +158,6 @@ class Phenotype:
             i = chromosome[professionRow].index('Analyst')
             if chromosome[editorRow][i] == 'Atom':
                 self.score += ok_score
-#             else:
-#                 self.score += fail_score
         except:
             pass
 
@@ -164,8 +166,6 @@ class Phenotype:
             i = chromosome[colorsRow].index('green')
             if chromosome[colorsRow][i-1] == 'white':
                 self.score += ok_score
-#             else:
-#                 self.score += fail_score
         except:
             pass
 
@@ -174,8 +174,6 @@ class Phenotype:
             i = chromosome[databaseRow].index('Redis')
             if chromosome[languajeRow][i] == 'Java':
                 self.score += ok_score
-#             else:
-#                 self.score += fail_score
         except:
             pass
 
@@ -184,8 +182,6 @@ class Phenotype:
             i = chromosome[databaseRow].index('Cassandra')
             if chromosome[colorsRow][i] == 'yellow':
                 self.score += ok_score
-#             else:
-#                 self.score += fail_score
         except:
             pass
 
@@ -193,8 +189,6 @@ class Phenotype:
         try:
             if chromosome[editorRow][2] == 'Notepad++':
                 self.score += ok_score
-#             else:
-#                 self.score += fail_score
         except:
             pass
 
@@ -202,8 +196,6 @@ class Phenotype:
         try:
             if chromosome[professionRow][0] == 'Developer':
                 self.score += ok_score
-#             else:
-#                 self.score += fail_score
         except:
             pass
 
@@ -212,8 +204,6 @@ class Phenotype:
             i = chromosome[databaseRow].index('HBase')
             if chromosome[languajeRow][i-1] == 'JavaScript' or chromosome[languajeRow][i+1] == 'JavaScript':
                 self.score += ok_score
-#             else:
-#                 self.score += fail_score
         except:
             pass
 
@@ -222,8 +212,6 @@ class Phenotype:
             i = chromosome[databaseRow].index('Cassandra')
             if chromosome[languajeRow][i+1] == 'C#' or chromosome[languajeRow][i-1] == 'C#':
                 self.score += ok_score
-#             else:
-#                 self.score += fail_score
         except:
             pass
 
@@ -232,8 +220,6 @@ class Phenotype:
             i = chromosome[databaseRow].index('Neo4j')
             if chromosome[editorRow][i] == 'Sublime Text':
                 self.score += ok_score
-#             else:
-#                 self.score += fail_score
         except:
             pass
 
@@ -242,8 +228,6 @@ class Phenotype:
             i = chromosome[professionRow].index('Engineer')
             if chromosome[databaseRow][i] == 'MongoDB':
                 self.score += ok_score
-#             else:
-#                 self.score += fail_score
         except:
             pass
 
@@ -252,8 +236,6 @@ class Phenotype:
             i = chromosome[professionRow].index('Developer')
             if chromosome[colorsRow][i] == 'blue':
                 self.score += ok_score
-#             else:
-#                 self.score += fail_score
         except:
             pass
             
@@ -263,7 +245,7 @@ class Riddle:
         self.start_time = time.time()
         self.population = []
         self.maxGenerations = 2000
-        self.mutationRate = 0.3
+        self.mutationRate = 0.5
 
     '''
     proceso general
@@ -272,10 +254,6 @@ class Riddle:
         
         self.generate(n_population)
         print(f"Población creada con {len(self.population)} individuos")
-
-        ''' descomentame '''
-        #print(self.population[0].chromosome)
-        #print(self.population[0].decode())
 
         print("Inicio del proceso iterativo")
         fit, indi = self.iterar()
@@ -287,59 +265,55 @@ class Riddle:
 
         counter = 0
         break_condition = False
+        best_score = 14
 
-        random.seed(time.time())
-
-        crossover_prop = 0.80
+        best_individual = None
         
         while not(break_condition):
             
-            # if counter % 100 == 0:
-            #     print("--------------------------------")
-            #     print(counter)
-            #     print(self.population[0].decode())
-            
             # seleccion
-            matingPool = []
+            minScore, maxScore = self.fitness_function()
 
-            minScore = 100000
-            maxScore = -100000
-            for i, x in enumerate(self.population):
-                x.fitness_function()
-                if x.score < minScore:
-                    minScore = x.score
-                if x.score > maxScore:
-                    maxScore = x.score
-
-            for i, ind in enumerate(self.population):
-                fitness = translate(ind.score, minScore, maxScore, 0, 1)
-                n = round(fitness * 100)
-                for j in range(0, n):
-                    matingPool.append(ind)
+            matingPool = self.mating_pool(minScore, maxScore)
 
             print(f"Mejor calificación: {maxScore}")
+            sortedPopulation = sorted(self.population, key=getScore, reverse=True)
+            best_individual = sortedPopulation[0]
             
             # crossover
-            for index in range(0, len(self.population)):
-                [parentA, parentB] = random.choices(matingPool, k=2)
-                childGenes = self.crossOver(parentA, parentB)
-                child = Phenotype(childGenes)
-                self.population[index] = child
+            self.crossOver(matingPool)
        
             # mutate
-            for ind in self.population:
-                ind.mutate(self.mutationRate)
+            self.mutate(self.mutationRate)
 
-            # condicion de corte
-            
             counter += 1
             print(f"Iteración nro {counter}")
             
-            if counter > self.maxGenerations or maxScore > 13:
+            # condicion de corte
+            if counter > self.maxGenerations or maxScore == best_score:
                 break_condition = True            
 
-        sortedPopulation = sorted(self.population, key=getScore, reverse=True)
-        return sortedPopulation[0].score, sortedPopulation[0]
+        return best_individual.score, best_individual
+
+    def fitness_function(self):
+      minScore = 100000
+      maxScore = -100000
+      for x in self.population:
+          x.fitness_function()
+          if x.score < minScore:
+              minScore = x.score
+          if x.score > maxScore:
+              maxScore = x.score
+      return minScore, maxScore
+
+    def mating_pool(self, minScore, maxScore): 
+        matingPool = []
+        for ind in self.population:
+            fitness = translate(ind.score, minScore, maxScore, 0, 1, 0.1)
+            n = round(fitness * 100)
+            for j in range(0, n):
+                matingPool.append(ind)
+        return matingPool
 
     '''
     operacion: generar individuos y agregarlos a la poblacion
@@ -352,25 +326,25 @@ class Riddle:
     '''
     operacion: mutación. Cambiar la configuración fenotipica de un individuo
     '''
-    def mutate(self, crossed, prob=0.5):
-        print("programame")
-        pass
-
+    def mutate(self, prob=0.5):
+        for ind in self.population:
+            ind.mutate(prob)
 
     '''
     operacion: cruazamiento. Intercambio de razos fenotipicos entre individuos
     '''
-    def crossOver(self, progenitor_1, progenitor_2):
-        genes1 = progenitor_1.chromosome
-        genes2 = progenitor_2.chromosome
-        limit = random.randint(0, len(genes1))
-        return [*genes1[:limit], *genes2[limit:]]
+    def crossOver(self, matingPool):
+        for index in range(0, len(self.population)):
+            [parentA, parentB] = random.choices(matingPool, k=2)
+            childGenes = parentA.crossOver(parentB)
+            child = Phenotype(childGenes)
+            self.population[index] = child
 
 
 start = time.time()
 
 rid = Riddle()
-rid.solve(n_population = 1000)
+rid.solve(n_population = 2000)
 
 end = time.time()
 hours, rem = divmod(end-start, 3600)
